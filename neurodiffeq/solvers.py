@@ -62,6 +62,9 @@ class BaseSolver(ABC, PretrainedSolver):
     :type analytic_solutions: callable, optional
     :param optimizer:
         The optimizer to be used for training.
+    :param lr_scheduler:
+        The learning rate scheduler to be used for training.
+        A lr schedule only used when not None, else lr stays constant.
     :type optimizer: `torch.nn.optim.Optimizer`, optional
     :param loss_fn:
         The loss function used for training.
@@ -113,7 +116,7 @@ class BaseSolver(ABC, PretrainedSolver):
     @deprecated_alias(criterion='loss_fn')
     def __init__(self, diff_eqs, conditions,
                  nets=None, train_generator=None, valid_generator=None, analytic_solutions=None,
-                 optimizer=None, loss_fn=None, n_batches_train=1, n_batches_valid=4,
+                 optimizer=None, lr_scheduler=None, loss_fn=None, n_batches_train=1, n_batches_valid=4,
                  metrics=None, n_input_units=None, n_output_units=None,
                  # deprecated arguments are listed below
                  shuffle=None, batch_size=None):
@@ -180,6 +183,7 @@ class BaseSolver(ABC, PretrainedSolver):
         self.metrics_history.update({'valid__' + name: [] for name in self.metrics_fn})
 
         self.optimizer = optimizer if optimizer else Adam(OrderedSet(chain.from_iterable(n.parameters() for n in self.nets)))
+        self.lr_scheduler = lr_scheduler
         self._set_loss_fn(loss_fn)
 
         def make_pair_dict(train=None, valid=None):
@@ -339,6 +343,11 @@ class BaseSolver(ABC, PretrainedSolver):
                     self.optimizer.step(closure=closure)
         """
         self.optimizer.step(closure=closure)
+    
+    def _do_lr_scheduler_step(self):
+        r"""Update the learning rate according to the learning rate scheduler."""
+        if self.lr_scheduler:
+            self.lr_scheduler.step()
 
     def _run_epoch(self, key):
         r"""Run an epoch on train/valid points, update history, and perform an optimization step if key=='train'.
@@ -492,6 +501,8 @@ class BaseSolver(ABC, PretrainedSolver):
             self.local_epoch = local_epoch + 1
             self.run_train_epoch()
             self.run_valid_epoch()
+            
+            self._do_lr_scheduler_step()
 
             for cb in callbacks:
                 cb(self)

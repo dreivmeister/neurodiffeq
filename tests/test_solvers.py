@@ -163,6 +163,23 @@ def test_lbfgs(generators):
         n_input_units=1,
         n_output_units=1,
     ).fit(1)
+    
+def test_lr_scheduler(generators):
+    nets = [FCNN()]
+    parameters = [p for net in nets for p in net.parameters()]
+    optimizer = torch.optim.Adam(parameters)
+    lr_scheduler = torch.optim.ExponentialLR(optimizer, gamma=0.9)
+    GenericSolver(
+        diff_eqs=DIFF_EQS,
+        conditions=CONDITIONS,
+        train_generator=generators['train'],
+        valid_generator=generators['valid'],
+        nets=nets,
+        optimizer=optimizer,
+        lr_scheduler=lr_scheduler,
+        n_input_units=1,
+        n_output_units=1,
+    ).fit(1)
 
 
 def test_early_stopping(solver):
