@@ -168,7 +168,7 @@ def test_lr_scheduler(generators):
     nets = [FCNN()]
     parameters = [p for net in nets for p in net.parameters()]
     optimizer = torch.optim.Adam(parameters)
-    lr_scheduler = torch.optim.ExponentialLR(optimizer, gamma=0.9)
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     GenericSolver(
         diff_eqs=DIFF_EQS,
         conditions=CONDITIONS,

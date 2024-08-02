@@ -371,6 +371,16 @@ The standard PyTorch way.
 
 3. Pass BOTH your `nets ` and your `optimizer` to the solver: `solver = Solver1D(..., nets=nets, optimizer=optimizer)`
 
+4. You can also add a learning rate scheduler
+
+```python
+   parameters = [p for net in nets for p in net.parameters()]  # list of paramters of all networks
+   MY_LEARNING_RATE = 5e-3
+   optimizer = torch.optim.Adam(parameters, lr=MY_LEARNING_RATE, ...)
+   scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+   solver = Solver1D(..., nets=nets, optimizer=optimizer, lr_scheduler=scheduler)
+   ```
+
 #### Q: I got a bad solution.
 
 Unlike traditional numerial methods (FEM, FVM, etc.), the NN-based solution requires some hypertuning. The library offers the utmost flexibility to try any combination of hyperparameters.
